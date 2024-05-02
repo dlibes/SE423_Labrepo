@@ -11,8 +11,8 @@ lcd = display.SPIDisplay()
 
 uart = pyb.UART(3)
 uart.init(115200, bits=8, parity=None)
-threshold1 = (0, 100, -128, 127, -128, 127) # change to a color threshold range
-threshold2 = (0, 100, -128, 127, -128, 127) # change to a color threshold range
+threshold1 = (32, 70, 1, 19, -38, -3) # Purple This was also Mr. Marry But it came first so the other one should be mr marry but its not so its actually out of order
+threshold2 = (36,73,17,55,11,38) # Orange This was Mr. Marry
 # Packets to Send
 blob_packet = '<fff'
 
