@@ -50,6 +50,11 @@ int16_t EPwm2A_F28027 = 1500;
 uint32_t numTimer0calls = 0;
 uint16_t UARTPrint = 0;
 
+uint16_t waypointOrange = 0;
+uint16_t waypointPurple = 0;
+uint16_t DroppedOffOrange = 0;
+uint16_t DroppedOffPurple = 0;
+
 float RCOpen = -65;
 float RCClosed = 72;
 float RCOrange = 30; //left
@@ -63,13 +68,16 @@ float colcentroid = 0;
 float pickupRowOrange = 200; //right
 float pickupRowPurple = 175; //left
 float pickupTime = 2000;
+float dropoffTime = 2000;
 uint16_t case1count = 0;
 uint16_t case22count = 0;
 uint16_t case24count = 0;
 uint16_t case26count = 0;
+uint16_t case28count = 0;
 uint16_t case32count = 0;
 uint16_t case34count = 0;
 uint16_t case36count = 0;
+uint16_t case38count = 0;
 
 float ballX = 0;
 float ballY = 0;
@@ -139,7 +147,7 @@ int16_t RobotState = 1;
 int16_t checkfronttally = 0;
 int32_t WallFollowtime = 0;
 
-#define NUMWAYPOINTS 6
+#define NUMWAYPOINTS 18
 uint16_t statePos = 0;
 pose robotdest[NUMWAYPOINTS];  // array of waypoints for the robot
 uint16_t i = 0;//for loop
@@ -396,12 +404,28 @@ void main(void)
     PieCtrlRegs.PIEIER12.bit.INTx11 = 1; //SWI3  Lowest priority
 
 
-    robotdest[0].x = -5;    robotdest[0].y = -3;
-    robotdest[1].x = 3;     robotdest[1].y = 7;
-    robotdest[2].x = -3;    robotdest[2].y = 7;
-    robotdest[3].x = 5;     robotdest[3].y = -3;
-    robotdest[4].x = 0;     robotdest[4].y = 11;
-    robotdest[5].x = 0;     robotdest[5].y = -1;
+    robotdest[0].x = -5;    robotdest[0].y = -3; //waypoint 1
+    robotdest[1].x = -1;    robotdest[1].y = -1;
+    robotdest[2].x = -1;    robotdest[2].y = 5;
+    robotdest[3].x = 3;     robotdest[3].y = 7;  //waypoint 2
+    robotdest[4].x = -3;    robotdest[4].y = 7;  //waypoint 3
+    robotdest[5].x = -1;    robotdest[5].y = 9;
+    robotdest[6].x = -1;    robotdest[6].y = 0;
+    robotdest[7].x = 5;     robotdest[7].y = -3; //waypoint 4
+    robotdest[8].x = -1;    robotdest[8].y = 0;
+    robotdest[9].x = -1;    robotdest[9].y = 5;
+    robotdest[10].x = 0;    robotdest[10].y = 11; //waypoint 5
+    robotdest[11].x = 4;    robotdest[11].y = 10;
+    robotdest[12].x = -1;   robotdest[12].y = 5;
+    robotdest[13].x = -1;   robotdest[13].y = 1;
+    robotdest[14].x = 0;    robotdest[14].y = -1;
+
+    robotdest[15].x = -2;   robotdest[15].y = -4; //waypoint orange
+    robotdest[16].x = 2;    robotdest[16].y = -4; //waypoint purple
+    robotdest[17].x = 0;    robotdest[17].y = -1;
+
+    waypointOrange = 15; //CHANGE CHANGE!!
+    waypointPurple = 16;
 
     // ROBOTps will be updated by Optitrack during gyro calibration
     // TODO: specify the starting position of the robot
@@ -874,6 +898,19 @@ __interrupt void SWI1_HighestPriority(void)     // EMIF_ERROR
             } else {
                 checkfronttally = 0;
             }
+
+            if ((statePos == waypointPurple + 1) && (DroppedOffPurple == 0)){
+                RobotState = 28;
+            }
+            else if (statePos == waypointPurple + 1){
+                RobotState = 1;
+            }
+            if ((statePos == waypointOrange + 1) && (DroppedOffOrange == 0)){
+                RobotState = 38;
+            }
+            else if (statePos == waypointOrange + 1){
+                RobotState = 1;
+            }
             break;
 
         case 10:
@@ -988,11 +1025,27 @@ __interrupt void SWI1_HighestPriority(void)     // EMIF_ERROR
             if (case26count == 1000){ //1 sec?
                 RobotState = 1;
                 case26count = 0;
+                ballcount++;
                 ballX = ROBOTps.x;
                 ballY = ROBOTps.y;
                 ballcolor = 0; //orange
-                ballcount++;
+
             }
+            break;
+
+        case 28:
+            case28count ++;
+            setEPWM5A_RCServo(RCOpen);
+            setEPWM5B_RCServo(RCPurple);
+            vref = -0.5;
+            turn = 0;
+            if (case28count == dropoffTime){
+                RobotState = 1;
+                case28count = 0;
+                setEPWM5A_RCServo(RCClosed);
+                setEPWM5B_RCServo(0);
+            }
+            DroppedOffPurple = 1;
             break;
 
         case 30:
@@ -1047,13 +1100,32 @@ __interrupt void SWI1_HighestPriority(void)     // EMIF_ERROR
             if (case36count == 1000){ //1 sec?
                 RobotState = 1;
                 case36count = 0;
+                ballcount++;
                 ballX = ROBOTps.x;
                 ballY = ROBOTps.y;
                 ballcolor = 1; //orange
-                ballcount++;
+
             }
 
             break;
+
+        case 38:
+            case38count ++;
+
+            setEPWM5A_RCServo(RCOpen);
+            setEPWM5B_RCServo(RCOrange);
+
+            vref = -0.5;
+            turn = 0;
+            if (case38count == dropoffTime){
+                RobotState = 1;
+                case38count = 0;
+                setEPWM5A_RCServo(RCClosed);
+                setEPWM5B_RCServo(0);
+            }
+            DroppedOffOrange = 1;
+            break;
+
         default:
             break;
         }
