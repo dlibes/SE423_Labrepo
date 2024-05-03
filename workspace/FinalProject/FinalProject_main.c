@@ -70,10 +70,12 @@ float pickupRowPurple = 175; //left
 float pickupTime = 2000;
 float dropoffTime = 2000;
 uint16_t case1count = 0;
+uint16_t case20count = 0;
 uint16_t case22count = 0;
 uint16_t case24count = 0;
 uint16_t case26count = 0;
 uint16_t case28count = 0;
+uint16_t case30count = 0;
 uint16_t case32count = 0;
 uint16_t case34count = 0;
 uint16_t case36count = 0;
@@ -147,7 +149,7 @@ int16_t RobotState = 1;
 int16_t checkfronttally = 0;
 int32_t WallFollowtime = 0;
 
-#define NUMWAYPOINTS 18
+#define NUMWAYPOINTS 13
 uint16_t statePos = 0;
 pose robotdest[NUMWAYPOINTS];  // array of waypoints for the robot
 uint16_t i = 0;//for loop
@@ -406,26 +408,21 @@ void main(void)
 
     robotdest[0].x = -5;    robotdest[0].y = -3; //waypoint 1
     robotdest[1].x = -1;    robotdest[1].y = -1;
-    robotdest[2].x = -1;    robotdest[2].y = 5;
-    robotdest[3].x = 3;     robotdest[3].y = 7;  //waypoint 2
-    robotdest[4].x = -3;    robotdest[4].y = 7;  //waypoint 3
-    robotdest[5].x = -1;    robotdest[5].y = 9;
-    robotdest[6].x = -1;    robotdest[6].y = 0;
-    robotdest[7].x = 5;     robotdest[7].y = -3; //waypoint 4
-    robotdest[8].x = -1;    robotdest[8].y = 0;
-    robotdest[9].x = -1;    robotdest[9].y = 5;
-    robotdest[10].x = 0;    robotdest[10].y = 11; //waypoint 5
-    robotdest[11].x = 4;    robotdest[11].y = 10;
-    robotdest[12].x = -1;   robotdest[12].y = 5;
-    robotdest[13].x = -1;   robotdest[13].y = 1;
-    robotdest[14].x = 0;    robotdest[14].y = -1;
+    robotdest[2].x = 3;     robotdest[2].y = 7;  //waypoint 2
+    robotdest[3].x = -3;    robotdest[3].y = 7;  //waypoint 3
+    robotdest[4].x = 1;    robotdest[4].y = -1;
+    robotdest[5].x = 5;     robotdest[5].y = -3; //waypoint 4
+    robotdest[6].x = 1;    robotdest[6].y = -1;
+    robotdest[7].x = 0;    robotdest[7].y = 11; //waypoint 5
+    robotdest[8].x = 1.5;    robotdest[8].y = 11;
+    robotdest[9].x = 0;    robotdest[9].y = -1;
 
-    robotdest[15].x = -2;   robotdest[15].y = -4; //waypoint orange
-    robotdest[16].x = 2;    robotdest[16].y = -4; //waypoint purple
-    robotdest[17].x = 0;    robotdest[17].y = -1;
+    robotdest[10].x = -2;   robotdest[10].y = -4; //waypoint orange
+    robotdest[11].x = 2;    robotdest[11].y = -4; //waypoint purple
+    robotdest[12].x = 0;    robotdest[12].y = -1;
 
-    waypointOrange = 15; //CHANGE CHANGE!!
-    waypointPurple = 16;
+    waypointOrange = 10; //CHANGE CHANGE!!
+    waypointPurple = 11;
 
     // ROBOTps will be updated by Optitrack during gyro calibration
     // TODO: specify the starting position of the robot
@@ -980,6 +977,7 @@ __interrupt void SWI1_HighestPriority(void)     // EMIF_ERROR
             if (MaxColThreshold1 == 0 || MaxAreaThreshold1 < 3) {
                 vref = 0;
                 turn = 0;
+                case20count ++;
             }
             else {
                 vref = 0.75;
@@ -987,8 +985,13 @@ __interrupt void SWI1_HighestPriority(void)     // EMIF_ERROR
             }
             // start kpvision out as 0.05 and kpvision could need to be negative.
 
+            if (case20count == 2000) {
+                RobotState = 1;
+                case20count = 0;
+            }
             if (MaxRowThreshold1 > pickupRowPurple){
                 RobotState = 22;
+                case20count = 0;
             }
             break;
 
@@ -1056,14 +1059,19 @@ __interrupt void SWI1_HighestPriority(void)     // EMIF_ERROR
             if (MaxColThreshold2 == 0 || MaxAreaThreshold2 < 3) {
                 vref = 0;
                 turn = 0;
+                case30count++;
             }
             else {
                 vref = 0.75;
                 turn = kpvision*(0 - colcentroid);
             }
-
+            if (case30count == 2000) {
+                RobotState = 1;
+                case30count = 0;
+            }
             if (MaxRowThreshold2 > pickupRowOrange){
                 RobotState = 32;
+                case30count = 0;
             }
             break;
 
